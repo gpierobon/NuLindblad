@@ -44,26 +44,30 @@ int main(int argc, char* argv[])
     for (int i = 0; i < dim; ++i)
         m_vals[i] = S - i;
 
-    std::cout << "Pre-computing Sz and exps for time evolution ... ";
     fflush(stdout);
     Mat Sz(dim, dim);
     Sz.setZero();
     for (int j = 0; j < dim; ++j)
         Sz(j, j) = m_vals[j];
 
-    //cMat exp_plus  = expm( 1i * pars.omega * Sz, pars.exp_k);
-    //cMat exp_minus = expm(-1i * pars.omega * Sz, pars.exp_k); 
-    cMat exp_plus(dim, dim);
-    cMat exp_minus(dim, dim);
-    exp_plus.setZero();
-    exp_minus.setZero();
-
-    for (int j = 0; j < dim; ++j)
-    {
-        cdouble phase = std::exp(cdouble(0.0, pars.omega * m_vals[j]));
-        exp_plus(j, j) = phase;
-        exp_minus(j, j) = std::conj(phase); 
+    std::cout << "Pre-computing exps for time evolution (sparse) ... ";
+    std::vector<Triplet> triplets;
+    for (int j = 0; j < dim; ++j) {
+        std::complex<double> phase = std::exp(std::complex<double>(0.0, pars.omega * m_vals[j]));
+        triplets.emplace_back(j, j, phase);
     }
+
+    cSpMat exp_plus(dim, dim);
+    exp_plus.setFromTriplets(triplets.begin(), triplets.end());
+
+    triplets.clear();
+    for (int j = 0; j < dim; ++j) {
+        std::complex<double> phase = std::exp(std::complex<double>(0.0, -pars.omega * m_vals[j]));
+        triplets.emplace_back(j, j, phase);
+    }
+    cSpMat exp_minus(dim, dim);
+    exp_minus.setFromTriplets(triplets.begin(), triplets.end());
+
     std::cout << " done!" << std::endl;
 
     std::vector<cVec> vsol;
