@@ -2,7 +2,7 @@ CC          = g++
 OPTIMIZE    = -fopenmp -O3 -g -Wall -Wno-unknown-pragmas -march=native
 
 INCL        = -I./src
-EIGEN_INCL  = -I/home/g/work/OQS/largeN/eigen
+EIGEN_INCL  = -I./externals
 
 EXEC        = run 
 
