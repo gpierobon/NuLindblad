@@ -1,14 +1,14 @@
 CC          = g++
 OPTIMIZE    = -fopenmp -O3 -g -Wall -Wno-unknown-pragmas -march=native
 
-INCL        = -I./
+INCL        = -I./src
 EIGEN_INCL  = -I/home/g/work/OQS/largeN/eigen
 
 EXEC        = run 
 
 CFLAGS      = $(OPTIMIZE) $(EIGEN_INCL) $(INCL)
 
-SRC         = main.cxx
+SRC         = src/main.cxx
 OBJ         = $(SRC:.cxx=.o)
 
 all: $(EXEC)
