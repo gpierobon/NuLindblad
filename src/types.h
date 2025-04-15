@@ -45,7 +45,6 @@ Params defaults()
     pars.kry   = 15;
     pars.outs  = 20;
 
-using namespace std::complex_literals;
     pars.omega = 1.0f;
     pars.gamma_p = 0.1;
     pars.gamma_m = 0.09;
@@ -60,7 +59,8 @@ using namespace std::complex_literals;
 
 int parseArgs(int argc, char* argv[], Params* pars)
 {
-    for (int i = 1; i < argc; ++i) {
+    for (int i = 1; i < argc; ++i)
+    {
         if      (!strcmp(argv[i], "--N") && i+1 < argc)       { pars->N       = atoi(argv[++i]); }
         else if (!strcmp(argv[i], "--kr") && i+1 < argc)      { pars->kry     = atoi(argv[++i]); }
         else if (!strcmp(argv[i], "--out") && i+1 < argc)     { pars->outs    = atoi(argv[++i]); }

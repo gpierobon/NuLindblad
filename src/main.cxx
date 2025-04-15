@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
 {
 
     Params pars = init(argc, argv);
-
+    
     bool cacheL = false;
     int  dim    = pars.N + 1;
     double S    = 0.5 * pars.N;
@@ -85,6 +85,7 @@ int main(int argc, char* argv[])
         //backward_euler_step(vstate, L, dt);
         //crank_nicolson_step(vstate, L, dt);
 
+                                                            
         // Intermediate measurements
         if (i % (num_steps / pars.outs) == 0)
         {
@@ -93,8 +94,16 @@ int main(int argc, char* argv[])
             vsol.push_back(ev_state);
             cMat mstate = Vec2Mat(ev_state, mdim, mdim);
             double jz = getJz(mstate, Sz, exp_plus, exp_minus);
+            cache_Jz(pars.N, t, jz);
             jz_vals.push_back(jz);
-            std::cout << "Jz = " << jz << std::endl;
+            std::cout << "Jz = " << jz;
+            
+            //Check the trace
+            double trace_rho = 0.0;
+            for (int j = 0; j < dim; ++j) {
+                trace_rho += ev_state(j*dim+j).real();  
+            }
+            std::cout << " ( tr[rho] = " << trace_rho << " )" << std::endl;
         }
 
         vstate = ev_state;
@@ -107,6 +116,7 @@ int main(int argc, char* argv[])
             vsol.push_back(ev_state);
             cMat mstate = Vec2Mat(ev_state, mdim, mdim);
             double jz = getJz(mstate, Sz, exp_plus, exp_minus);
+            cache_Jz(pars.N, t, jz);
             jz_vals.push_back(jz);
             std::cout << "Jz = " << jz << std::endl;
         }

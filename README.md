@@ -1,5 +1,6 @@
 # NuLindblad
 
+Solving the Lindblad equation in the Dicke basis. Makes use of the [Eigen](https://gitlab.com/libeigen/eigen) library, already include in the externals folder.
 
 ## Installing 
 ```bash
