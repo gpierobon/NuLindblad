@@ -3,6 +3,26 @@
 
 #include <types.h>
 
+cVec odefun(double t, const cVec& X_vec, const cSpMat& lind)
+{
+    return lind * X_vec;
+}
+
+void Euler_step(cVec& X, const cSpMat& lind, double h)
+{
+    X += h * (lind * X);
+}
+
+void RK4_step(cVec& X, const cSpMat& lind, double t, double h)
+{
+    cVec k1 = odefun(t, X, lind);
+    cVec k2 = odefun(t + 0.5 * h, X + 0.5 * h * k1, lind);
+    cVec k3 = odefun(t + 0.5 * h, X + 0.5 * h * k2, lind);
+    cVec k4 = odefun(t + h, X + h * k3, lind);
+
+    X += (h / 6.0) * (k1 + 2.0 * k2 + 2.0 * k3 + k4);
+}
+
 void arnoldi(const cSpMat& L, const cVec& v0, cMat& V, cMat& H, int m) {
     int n = v0.size();
     V = cMat::Zero(n, m); // Krylov basis
@@ -31,12 +51,11 @@ void arnoldi(const cSpMat& L, const cVec& v0, cMat& V, cMat& H, int m) {
     }
 }
 
-cVec krylov_expm(const cSpMat& L, const cVec& rho0, double t, int m) {
+cVec krylov_step(const cSpMat& L, const cVec& rho0, double t, int m) {
     cMat V, H;
     arnoldi(L, rho0, V, H, m);  // Build Krylov subspace
 
-    // Compute the matrix exponential of the small Hessenberg matrix H * t
-    cMat expH = expm(t * H);  // Eigen's matrix exponential (for small dense matrices)
+    cMat expH = expm(t * H);
 
     // Vector of ones, first element corresponds to the norm of the initial state
     cVec e1 = cVec::Zero(m);
@@ -47,22 +66,36 @@ cVec krylov_expm(const cSpMat& L, const cVec& rho0, double t, int m) {
     return result;
 }
 
+void backward_euler_step(cVec& X, const cSpMat& L, double h)
+{
+    const int dim = L.rows();
+    cSpMat I(dim, dim);
+    I.setIdentity(); 
+
+    cSpMat A = I - h * L;
+
+    Eigen::SparseLU<cSpMat> solver;
+    solver.compute(A);
+    if (solver.info() != Eigen::Success) {
+        throw std::runtime_error("Decomposition failed in Backward Euler step");
+    }
+
+    X = solver.solve(X);
+    if (solver.info() != Eigen::Success) {
+        throw std::runtime_error("Solving failed in Backward Euler step");
+    }
+}
+
 void crank_nicolson_step(cVec& X, const cSpMat& L, double h)
 {
     const int dim = L.rows();
     cSpMat I(dim, dim);
     I.setIdentity(); 
 
-    // Construct A = (I - h/2 * L)
     cSpMat A = I - (h / 2.0) * L;
-
-    // Construct B = (I + h/2 * L)
     cSpMat B = I + (h / 2.0) * L;
-
-    // Compute RHS: B * X
     cVec rhs = B * X;
 
-    // Solve A * X_new = rhs
     Eigen::SparseLU<cSpMat> solver;
     solver.compute(A);
     if (solver.info() != Eigen::Success) {
@@ -76,47 +109,41 @@ void crank_nicolson_step(cVec& X, const cSpMat& L, double h)
     
 }
 
-void backward_euler_step(cVec& X, const cSpMat& L, double h)
+void evolve(IntegratorType type, cVec &X, const cSpMat& L, double h, double t)
 {
-    const int dim = L.rows();
-    cSpMat I(dim, dim);
-    I.setIdentity(); 
+    switch (type)
+    {
+        case IntegratorType::Euler:
+            Euler_step(X, L, h);
+            break;
 
-    // Construct (I - h * L)
-    cSpMat A = I - h * L;
+        case IntegratorType::RK4:
+            RK4_step(X, L, t, h);
+            break;
 
-    // Solve (I - h * L) * X_new = X
-    Eigen::SparseLU<cSpMat> solver;
-    solver.compute(A);
-    if (solver.info() != Eigen::Success) {
-        throw std::runtime_error("Decomposition failed in Backward Euler step");
+        case IntegratorType::BackwardEuler:
+            backward_euler_step(X, L, h);
+            break;
+
+        case IntegratorType::CrankNicolson:
+            crank_nicolson_step(X, L, h);
+            break;
     }
 
-    // Solve for X_new
-    X = solver.solve(X);
-    if (solver.info() != Eigen::Success) {
-        throw std::runtime_error("Solving failed in Backward Euler step");
-    }
-}
-
-Vec odefun(double t, const Vec& X_vec, const SpMat& lind)
-{
-    return lind * X_vec;
-}
-
-void RK4(Vec& X, const SpMat& lind, double t, double h)
-{
-    Vec k1 = odefun(t, X, lind);
-    Vec k2 = odefun(t + 0.5 * h, X + 0.5 * h * k1, lind);
-    Vec k3 = odefun(t + 0.5 * h, X + 0.5 * h * k2, lind);
-    Vec k4 = odefun(t + h, X + h * k3, lind);
-    X += (h / 6.0) * (k1 + 2*k2 + 2*k3 + k4);
 }
 
 double getJz(const cMat& mat, const cMat& Sz, const cMat& exp1, const cMat& exp2)
 {
     cMat temp = mat * exp1 * Sz * exp2;
     return temp.trace().real();
+}
+
+double getJzSlope(double t1, double jz1, double t0, double jz0)
+{
+    if (t1 <= t0 || jz1 == 0.0 || jz0 == 0.0){
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+    return std::log(jz1 / jz0) / std::log(t1 / t0);
 }
 
 #endif

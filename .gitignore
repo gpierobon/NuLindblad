@@ -2,3 +2,5 @@
 src/lanczos.h
 main.o
 run
+
+output/

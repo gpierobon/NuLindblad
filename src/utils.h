@@ -4,6 +4,7 @@
 #include <fstream>
 #include <vector>
 #include <cmath>
+#include <iomanip>
 #include <Eigen/Dense>
 #include <types.h>
 
@@ -33,6 +34,32 @@ double spectral_radius(const cSpMat& A)
 
     cdouble lambda = x.dot(A*x);
     return std::abs(lambda); 
+}
+
+void getSz(int N, SpMat& Sz)
+{
+    int   dim = N+1;
+    double S  = 0.5*N;
+    
+    for (int j = 0; j < dim; ++j)
+        Sz.insert(j,j) = S-j; 
+    Sz.makeCompressed();
+}
+
+void getExp(int N, double omega, cSpMat& expm)
+{
+    int   dim = N+1;
+    double S  = 0.5*N;
+    
+    std::vector<Triplet> triplets;
+    
+    for (int j = 0; j < dim; ++j)
+    {
+        cdouble phase = std::exp(cdouble(0.0, omega * (S-j)));
+        triplets.emplace_back(j, j, phase);
+    }
+    expm.setFromTriplets(triplets.begin(), triplets.end());
+    triplets.clear();
 }
 
 
@@ -94,5 +121,47 @@ void cache_Jz(int&N, double&t, double&Jz)
     else
         std::cerr << "Error: could not open file for writing.\n";
 }
+
+
+std::string formatDuration(std::chrono::duration<double> dur) {
+    using namespace std::chrono;
+
+    double seconds = dur.count();
+    std::ostringstream out;
+    out << std::fixed << std::setprecision(1);
+
+    if (seconds < 60.0) {
+        out << seconds << "s";
+    } else if (seconds < 3600.0) {
+        int mins = static_cast<int>(seconds) / 60;
+        double rem = seconds - mins * 60;
+        out << mins << "m " << rem << "s";
+    } else {
+        int hrs  = static_cast<int>(seconds) / 3600;
+        int mins = (static_cast<int>(seconds) % 3600) / 60;
+        double rem = seconds - hrs * 3600 - mins * 60;
+        out << hrs << "h " << mins << "m " << rem << "s";
+    }
+
+    return out.str();
+}
+
+
+void printStatus(int step, int num_steps, double t, double jz, 
+                 std::chrono::duration<double> dur, double slope)
+{
+    double percent = 100.0 * step / num_steps;
+    std::string time_str = formatDuration(dur);
+
+    std::cout << std::fixed    <<  std::setprecision(4)
+              << std::setw(8)  << "Meas:"     << " " << std::setw(6) << step << "/" << num_steps
+              << std::setw(6)  << "t:"        << " " << std::setw(8) << t
+              << std::setw(8)  << "<Jz>:"    << " " << std::setw(8) << jz
+              << std::setw(8) << "n:"    << " " << std::setw(8)
+              << (std::isnan(slope) ? "  ---" : std::to_string(slope).substr(0, 7))
+              << std::setw(4)  << " "         << std::setw(6) << std::setprecision(1) << percent << "%"
+              << std::setw(14) << "Elapsed:"  << " " << std::setw(12) << time_str << std::endl;
+}
+
 
 #endif
