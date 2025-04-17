@@ -1,5 +1,5 @@
 CC          = g++
-OPTIMIZE    = -fopenmp -O3 -g -Wall -Wno-unknown-pragmas -march=native
+OPTIMIZE    = -fopenmp -O3 -g -Wall -Wno-unknown-pragmas -march=haswell
 
 INCL        = -I./src
 EIGEN_INCL  = -I./externals

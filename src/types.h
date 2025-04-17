@@ -92,7 +92,7 @@ int parseArgs(int argc, char* argv[], Params* pars)
     {
         if      (!strcmp(argv[i], "--N") && i+1 < argc)       { pars->N       = atoi(argv[++i]); }
         else if (!strcmp(argv[i], "--kr") && i+1 < argc)      { pars->kry     = atoi(argv[++i]); }
-        else if (!strcmp(argv[i], "--out") && i+1 < argc)     { pars->outs    = atoi(argv[++i]); }
+        else if (!strcmp(argv[i], "--meas") && i+1 < argc)    { pars->outs    = atoi(argv[++i]); }
         else if (!strcmp(argv[i], "--thr") && i+1 < argc)     { pars->hthr    = atof(argv[++i]); }
         else if (!strcmp(argv[i], "--h") && i+1 < argc)       { pars->h       = atof(argv[++i]); }
         else if (!strcmp(argv[i], "--ti") && i+1 < argc)      { pars->t_i     = atof(argv[++i]); }
@@ -100,6 +100,7 @@ int parseArgs(int argc, char* argv[], Params* pars)
         else if (!strcmp(argv[i], "--omega") && i+1 < argc)   { pars->omega   = atof(argv[++i]); }
         else if (!strcmp(argv[i], "--gamma_p") && i+1 < argc) { pars->gamma_p = atof(argv[++i]); }
         else if (!strcmp(argv[i], "--gamma_m") && i+1 < argc) { pars->gamma_m = atof(argv[++i]); }
+        else if (!strcmp(argv[i], "--file") && i+1 < argc)    { pars->outf    = argv[++i];       }
         else if (!strcmp(argv[i], "--integrator") && i + 1 < argc)
         {
             std::string integrator_str = argv[++i];

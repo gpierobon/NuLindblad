@@ -22,7 +22,6 @@ int main(int argc, char* argv[])
 
     Clock::time_point start = Clock::now();
     
-    bool cacheL = false;
     int    dim  = pars.N + 1;
     double t0   = pars.t_i;
 
@@ -31,8 +30,7 @@ int main(int argc, char* argv[])
     int mdim    = sqrt(vstate.size());
 
     cSpMat L = Lindblad_sparse_pm(&pars);
-    if (cacheL) {cache_L(L, "Lindblad.txt"); }
-    L.makeCompressed();
+    //L.makeCompressed();
 
     // Precompute Sz, exp_+, exp_- for Jz trace
     std::cout << "Pre-computing exps for time evolution (sparse) ... ";
@@ -56,28 +54,34 @@ int main(int argc, char* argv[])
     std::cout << "\n";
     std::cout << "Running a loop with " << num_steps << " steps ... \n" << std::endl;
 
-    // For the slope
+    size_t n_bins = pars.outs; 
+    std::vector<size_t> log_bins = generateLogBins(t0, dt, num_steps, n_bins);
+
     double t_prev = -1.0;
     double jz_prev = -1.0;
+    double slope;
 
     for (size_t i = 0; i < num_steps; ++i)
     {
         double t = t0 + i * dt;
 
         evolve(pars.integrator, vstate, L, dt, t);
-        //cVec ev_state = krylov_expm(L, vstate, dt, pars.kry); // Krylov case
                                                             
-        // Intermediate measurements
-        if (i % (num_steps / pars.outs) == 0)
+        if (std::binary_search(log_bins.begin(), log_bins.end(), i))
         {
-            //cMat mstate = Vec2Mat(ev_state, mdim, mdim);
             cMat mstate = Vec2Mat(vstate, mdim, mdim);
             double jz = getJz(mstate, Sz, exp_plus, exp_minus);
             cache_Jz(&pars, t, jz);
 
-            double slope = std::numeric_limits<double>::quiet_NaN();
+            slope = std::numeric_limits<double>::quiet_NaN();
             if (t_prev > 0.0 && std::abs(jz_prev) > 1e-12)
                 slope = getJzSlope(t, -jz, t_prev, -jz_prev);
+
+            if (slope < 0.001)
+            {
+                std::cout << "\nSolution is stable, closing the loop!" << std::endl;
+                break;
+            }
             
             Clock::time_point curr = Clock::now();
             auto dur = curr-start;
@@ -85,25 +89,6 @@ int main(int argc, char* argv[])
 
             t_prev = t;
             jz_prev = jz;
-        }
-
-        //vstate = ev_state; // Krylov case
-        
-        // Last measurement
-        if (i == num_steps-1)
-        {
-            //cMat mstate = Vec2Mat(ev_state, mdim, mdim);
-            cMat mstate = Vec2Mat(vstate, mdim, mdim);
-            double jz = getJz(mstate, Sz, exp_plus, exp_minus);
-            cache_Jz(&pars, t, jz);
-            
-            double slope = std::numeric_limits<double>::quiet_NaN();
-            if (t_prev > 0.0 && std::abs(jz_prev) > 1e-12)
-                slope = getJzSlope(t, -jz, t_prev, -jz_prev);
-
-            Clock::time_point curr = Clock::now();
-            auto dur = curr-start;
-            printStatus(i, num_steps, t, jz, dur, slope);
         }
     }
 

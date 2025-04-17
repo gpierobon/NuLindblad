@@ -122,6 +122,19 @@ void cache_Jz(Params* pars, double&t, double&Jz)
         std::cerr << "Error: could not open file for writing.\n";
 }
 
+std::vector<size_t> generateLogBins(double t0, double dt, size_t num_steps, size_t n_bins) {
+    std::vector<size_t> log_bins;
+
+    double log_t_max = std::log10(t0 + num_steps * dt);
+    for (size_t k = 0; k < n_bins; ++k) {
+        double log_t = std::log10(t0 + dt);  // Adjusted to the actual start time
+        double t_bin = std::pow(10.0, log_t + (log_t_max - log_t) * k / (n_bins - 1));
+        size_t i_bin = static_cast<size_t>((t_bin - t0) / dt);
+        log_bins.push_back(i_bin);
+    }
+
+    return log_bins;
+}
 
 std::string formatDuration(std::chrono::duration<double> dur) {
     using namespace std::chrono;

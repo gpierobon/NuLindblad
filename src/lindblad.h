@@ -114,6 +114,8 @@ cSpMat Lindblad_sparse_pm(Params* pars) {
     auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
     std::cout << "took " << 1e-3 * dur.count() << " seconds" << std::endl;
 
+    L.makeCompressed();
+
     return L;
 }
 
