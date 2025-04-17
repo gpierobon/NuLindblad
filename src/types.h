@@ -44,6 +44,8 @@ typedef struct
     double h;
     double t_i;
     double t_f;
+    
+    std::string outf;
 
     IntegratorType integrator;
 
@@ -65,6 +67,8 @@ Params defaults()
     pars.h   = 0.01;
     pars.t_i = 1e-10;
     pars.t_f = 1.0f;
+
+    pars.outf = "output.txt";
 
     pars.integrator = IntegratorType::RK4;
 

@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
             //cMat mstate = Vec2Mat(ev_state, mdim, mdim);
             cMat mstate = Vec2Mat(vstate, mdim, mdim);
             double jz = getJz(mstate, Sz, exp_plus, exp_minus);
-            cache_Jz(pars.N, t, jz);
+            cache_Jz(&pars, t, jz);
 
             double slope = std::numeric_limits<double>::quiet_NaN();
             if (t_prev > 0.0 && std::abs(jz_prev) > 1e-12)
@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
             //cMat mstate = Vec2Mat(ev_state, mdim, mdim);
             cMat mstate = Vec2Mat(vstate, mdim, mdim);
             double jz = getJz(mstate, Sz, exp_plus, exp_minus);
-            cache_Jz(pars.N, t, jz);
+            cache_Jz(&pars, t, jz);
             
             double slope = std::numeric_limits<double>::quiet_NaN();
             if (t_prev > 0.0 && std::abs(jz_prev) > 1e-12)

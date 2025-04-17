@@ -107,11 +107,11 @@ void cache_L(const cSpMat& mat, const std::string& fname)
     file.close();
 }
 
-void cache_Jz(int&N, double&t, double&Jz)
+void cache_Jz(Params* pars, double&t, double&Jz)
 {
-    std::ostringstream fname;
-    fname << "output/Jz_N_" << N << ".txt"; 
-    std::ofstream file(fname.str(), std::ios::app);
+    //std::ostringstream fname;
+    //fname << "output/Jz_N_" << N << ".txt"; 
+    std::ofstream file(pars->outf, std::ios::app);
 
     if (file.is_open())
     {
