@@ -1,16 +1,20 @@
 import os, sys
 import time
+import subprocess
 import numpy as np
 import matplotlib.pyplot as plt
 
-import subprocess
+
+plt.rcParams['axes.linewidth'] = 1.3
+plt.rc('text', usetex=True)
+plt.rc('font', family='serif',size=16)
 
 # ---- Inputs -----------
 program    = "run"
-N          = 200
+N          = int(sys.argv[1])
 ti         = 0.001
 tf         = 2.0
-out        = 50
+out        = 100
 thr        = 1.0
 integrator = "Euler"
 # -----------------------
@@ -28,16 +32,21 @@ command = [exe] + options
 process = subprocess.Popen(command)
 
 plt.ion()
-fig, ax = plt.subplots()
-line, = ax.plot([], [], 'b-', lw=3)
-ax.set_xlabel("Time")
-ax.set_ylabel("Trace")
-ax.set_xlim(ti, tf)
-ax.set_ylim(-N/1.8, 0)
-#ax.set_xscale('log')
+fig, ax = plt.subplots(figsize=(10,7))
+
+line, = ax.plot([], [], 'b-', lw=3, label='Numerical')
 
 trange = np.linspace(0,tf,100)
-ax.plot(trange, -gnet*trange*N**2/4, c='k', ls='--', lw=1)
+ax.plot(trange, -gnet*trange*N**2/4, c='k', ls='--', lw=1, label='Perturbative')
+
+ax.set_xlabel(r"$t$")
+ax.set_ylabel(r"$\langle J_z\rangle$")
+ax.set_xlim(ti, tf)
+ax.set_ylim(-N/1.8, 0)
+ax.legend(frameon=False, fontsize=15)
+ax.set_title(r'$N=%d$'%N, fontsize=18)
+#ax.set_xscale('log')
+
 
 
 output_file = os.path.join(os.getcwd(), "output.txt")
