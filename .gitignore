@@ -1,8 +1,9 @@
 
 src/lanczos.h
 main.o
+main_jx.o
 run
+runx
 
 output/
-output.txt
-N*.txt
+*.txt

@@ -132,9 +132,18 @@ void evolve(IntegratorType type, cVec &X, const cSpMat& L, double h, double t)
 
 }
 
-double getJz(const cMat& mat, const cMat& Sz, const cMat& exp1, const cMat& exp2)
+double getJz(const cMat& mat, const cMat& Sz,
+             const cMat& exp1, const cMat& exp2)
 {
     cMat temp = mat * exp1 * Sz * exp2;
+    return temp.trace().real();
+}
+
+double getJx(const cMat& mat, const cMat& Splus, const cMat& Sminus,
+             const cMat& exp1, const cMat& exp2)
+{
+    cMat Sx = 0.5 * (Splus + Sminus);
+    cMat temp = mat * exp1 * Sx * exp2;
     return temp.trace().real();
 }
 

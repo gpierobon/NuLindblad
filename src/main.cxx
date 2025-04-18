@@ -18,19 +18,21 @@ int main(int argc, char* argv[])
     int    dim  = pars.N + 1;
     double t0   = pars.t_i;
 
-    cMat mstate = DickeState(pars.N);
+    cMat mstate = initState(&pars);
     cVec vstate = Mat2Vec(mstate);
     int mdim    = sqrt(vstate.size());
 
     cSpMat L = Lindblad_sparse_pm(&pars);
 
-    // Precompute Sz, exp_+, exp_- for Jz trace
     std::cout << "Pre-computing exps for time evolution (sparse) ... ";
     SpMat  Sz       (dim, dim);
+    cSpMat Splus    (dim, dim);
+    cSpMat Sminus   (dim, dim);
     cSpMat exp_plus (dim, dim);
     cSpMat exp_minus(dim, dim);
     
-    getSz (pars.N, Sz);
+    getSz (pars.N,  Sz);
+    getSpm(pars.N,  Splus, Sminus);
     getExp(pars.N,  pars.omega, exp_plus);
     getExp(pars.N, -pars.omega, exp_minus);
     std::cout << " done!" << std::endl;

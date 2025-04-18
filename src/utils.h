@@ -36,6 +36,24 @@ double spectral_radius(const cSpMat& A)
     return std::abs(lambda); 
 }
 
+void printSparseMatrix(const cSpMat& mat) {
+    int rows = mat.rows();
+    int cols = mat.cols();
+
+    std::cout << "\n\n";
+    for (int i = 0; i < rows; ++i)
+    {
+        for (int j = 0; j < cols; ++j)
+        {
+            if (mat.coeff(i, j) != cdouble(0.0, 0.0))
+                std::cout << std::setprecision(3) << mat.coeff(i, j).real() << " ";
+            else
+                std::cout << " 0.000 ";
+        }
+        std::cout << std::endl;
+    }
+}
+
 void getSz(int N, SpMat& Sz)
 {
     int   dim = N+1;
@@ -43,7 +61,34 @@ void getSz(int N, SpMat& Sz)
     
     for (int j = 0; j < dim; ++j)
         Sz.insert(j,j) = S-j; 
+
     Sz.makeCompressed();
+}
+
+void getSpm(int N, cSpMat& Sp, cSpMat& Sm)
+{
+    int    dim = N+1;
+    double S   = 0.5*N;
+
+    std::vector<double> m_vals(dim);
+    for (int i = 0; i < dim; ++i)
+        m_vals[i] = S - i;
+    
+    for (int j = 0; j < dim - 1; ++j)
+    {
+        double val = std::sqrt((S - m_vals[j + 1]) * (S + m_vals[j + 1] + 1));
+
+        if (val != 0.0)
+        {
+            Sp.insert(j, j + 1) = cdouble(val, 0.0);
+            Sm.insert(j + 1, j) = cdouble(val, 0.0);
+        }
+    }
+
+    Sp.makeCompressed();
+    Sm.makeCompressed();
+    //printSparseMatrix(Sp);
+    //printSparseMatrix(Sm);
 }
 
 void getExp(int N, double omega, cSpMat& expm)
@@ -109,8 +154,6 @@ void cache_L(const cSpMat& mat, const std::string& fname)
 
 void cache_Jz(Params* pars, double&t, double&Jz)
 {
-    //std::ostringstream fname;
-    //fname << "output/Jz_N_" << N << ".txt"; 
     std::ofstream file(pars->outf, std::ios::app);
 
     if (file.is_open())
@@ -160,18 +203,32 @@ std::string formatDuration(std::chrono::duration<double> dur) {
 }
 
 
-void printStatus(int step, int num_steps, double t, double jz, 
+void printStatus(int step, int num_steps, double t, double jz,  
                  std::chrono::duration<double> dur, double slope)
 {
     double percent = 100.0 * step / num_steps;
     std::string time_str = formatDuration(dur);
 
-    std::cout << std::fixed    <<  std::setprecision(4)
+    std::cout << std::fixed    <<  std::setprecision(5)
               << std::setw(8)  << "Meas:"     << " " << std::setw(6) << step << "/" << num_steps
-              << std::setw(6)  << "t:"        << " " << std::setw(6) << t
-              << std::setw(8)  << "<Jz>:"    << " " << std::setw(10) << jz
-              << std::setw(6) << "n:"    << " " << std::setw(8)
+              << std::setw(8)  << "t:"        << " " << std::setw(6) << t
+              << std::setw(8)  << "<Jz>:"     << " " << std::setw(10) << jz
+              << std::setw(6)  << "n:"        << " " << std::setw(8)
               << (std::isnan(slope) ? "  ---" : std::to_string(slope).substr(0, 7))
+              << std::setw(4)  << " "         << std::setw(6) << std::setprecision(1) << percent << "%"
+              << std::setw(12) << "Elapsed:"  << " " << std::setw(12) << time_str << std::endl;
+}
+
+void printStatusx(int step, int num_steps, double t, double jx,  
+                  std::chrono::duration<double> dur)
+{
+    double percent = 100.0 * step / num_steps;
+    std::string time_str = formatDuration(dur);
+
+    std::cout << std::fixed    <<  std::setprecision(5)
+              << std::setw(8)  << "Meas:"     << " " << std::setw(6) << step << "/" << num_steps
+              << std::setw(8)  << "t:"        << " " << std::setw(6) << t
+              << std::setw(8)  << "<Jx>:"     << " " << std::setw(10) << jx
               << std::setw(4)  << " "         << std::setw(6) << std::setprecision(1) << percent << "%"
               << std::setw(12) << "Elapsed:"  << " " << std::setw(12) << time_str << std::endl;
 }

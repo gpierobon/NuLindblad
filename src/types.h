@@ -23,6 +23,12 @@ using cSpMat  = Eigen::SparseMatrix<std::complex<double>>;
 
 using Triplet = Eigen::Triplet<std::complex<double>>;
 
+enum class StateType
+{
+    Dicke, 
+    Product
+};
+
 enum class IntegratorType
 {
     Euler,
@@ -48,6 +54,7 @@ typedef struct
     
     std::string outf;
 
+    StateType state;
     IntegratorType integrator;
 
 } Params;
@@ -72,9 +79,18 @@ Params defaults()
 
     pars.outf = "output.txt";
 
+    pars.state = StateType::Dicke;
     pars.integrator = IntegratorType::RK4;
 
     return pars;
+}
+
+StateType parseState(const std::string& name)
+{
+    if (name == "Dicke")   return StateType::Dicke;
+    if (name == "Product") return StateType::Product;
+
+    throw std::invalid_argument("Unknown integrator: " + name);
 }
 
 IntegratorType parseIntegrator(const std::string& name)
@@ -104,6 +120,18 @@ int parseArgs(int argc, char* argv[], Params* pars)
         else if (!strcmp(argv[i], "--gamma_p") && i+1 < argc) { pars->gamma_p = atof(argv[++i]); }
         else if (!strcmp(argv[i], "--gamma_m") && i+1 < argc) { pars->gamma_m = atof(argv[++i]); }
         else if (!strcmp(argv[i], "--file") && i+1 < argc)    { pars->outf    = argv[++i];       }
+
+        else if (!strcmp(argv[i], "--state") && i + 1 < argc)
+        {
+            std::string state_str = argv[++i];
+            try{
+                pars->state = parseState(state_str);
+            } catch (const std::exception& e) {
+                std::cerr << "Error: " << e.what() << "\n";
+                return 1;
+            }
+        }
+
         else if (!strcmp(argv[i], "--integrator") && i + 1 < argc)
         {
             std::string integrator_str = argv[++i];
