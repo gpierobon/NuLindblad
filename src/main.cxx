@@ -1,11 +1,4 @@
 #include <iostream>
-#include <complex>
-#include <vector>
-
-#include <Eigen/Core>
-#include <Eigen/Dense>
-#include <Eigen/Sparse>
-
 #include <types.h>
 #include <utils.h>
 #include <state.h>
@@ -30,7 +23,6 @@ int main(int argc, char* argv[])
     int mdim    = sqrt(vstate.size());
 
     cSpMat L = Lindblad_sparse_pm(&pars);
-    //L.makeCompressed();
 
     // Precompute Sz, exp_+, exp_- for Jz trace
     std::cout << "Pre-computing exps for time evolution (sparse) ... ";
@@ -60,6 +52,10 @@ int main(int argc, char* argv[])
     double t_prev = -1.0;
     double jz_prev = -1.0;
     double slope;
+    double slope_prev = std::numeric_limits<double>::quiet_NaN();
+    const double slope_tol = 0.025;
+    bool check_pert   = true;
+    bool reached_pert = false;
 
     for (size_t i = 0; i < num_steps; ++i)
     {
@@ -77,9 +73,27 @@ int main(int argc, char* argv[])
             if (t_prev > 0.0 && std::abs(jz_prev) > 1e-12)
                 slope = getJzSlope(t, -jz, t_prev, -jz_prev);
 
-            if (slope < 0.001)
+            if (check_pert)
             {
-                std::cout << "\nSolution is stable, closing the loop!" << std::endl;
+                if (!std::isnan(slope_prev) && !std::isnan(slope))
+                {
+                    if ( (slope_prev < (1.0 - slope_tol) && slope >= (1.0 - slope_tol)) ||
+                         (slope_prev > (1.0 + slope_tol) && slope <= (1.0 + slope_tol)) )
+                    {
+                        check_pert = false;
+                        reached_pert = true;
+                        std::cout << "\n ---------------------------------------------------";
+                        std::cout << "\n Reached perturbative solution at t = " 
+                                  << std::setprecision(5) << t << std::endl;
+                        std::cout << " ---------------------------------------------------\n\n";
+                    }
+                }
+            }
+
+            if (reached_pert && slope < pars.sthr)
+            {
+                std::cout << "\nSlope reached " << std::setprecision(3) 
+                          << pars.sthr << ", closing the loop!\n";
                 break;
             }
             
@@ -89,6 +103,7 @@ int main(int argc, char* argv[])
 
             t_prev = t;
             jz_prev = jz;
+            slope_prev = slope;
         }
     }
 

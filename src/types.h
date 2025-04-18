@@ -38,6 +38,7 @@ typedef struct
     int outs;
 
     double hthr;
+    double sthr;
     double omega;
     double gamma_p;
     double gamma_m;
@@ -55,17 +56,18 @@ typedef struct
 Params defaults()
 {
     Params pars;
-    pars.N     = 10;
+    pars.N     = 100;
     pars.kry   = 15;
-    pars.outs  = 20;
+    pars.outs  = 50;
 
     pars.hthr  = 0.5f;
+    pars.sthr  = 0.001f;
     pars.omega = 1.0f;
     pars.gamma_p = 0.1;
     pars.gamma_m = 0.09;
 
     pars.h   = 0.01;
-    pars.t_i = 1e-10;
+    pars.t_i = 1e-5;
     pars.t_f = 1.0f;
 
     pars.outf = "output.txt";
@@ -94,6 +96,7 @@ int parseArgs(int argc, char* argv[], Params* pars)
         else if (!strcmp(argv[i], "--kr") && i+1 < argc)      { pars->kry     = atoi(argv[++i]); }
         else if (!strcmp(argv[i], "--meas") && i+1 < argc)    { pars->outs    = atoi(argv[++i]); }
         else if (!strcmp(argv[i], "--thr") && i+1 < argc)     { pars->hthr    = atof(argv[++i]); }
+        else if (!strcmp(argv[i], "--sthr") && i+1 < argc)    { pars->sthr    = atof(argv[++i]); }
         else if (!strcmp(argv[i], "--h") && i+1 < argc)       { pars->h       = atof(argv[++i]); }
         else if (!strcmp(argv[i], "--ti") && i+1 < argc)      { pars->t_i     = atof(argv[++i]); }
         else if (!strcmp(argv[i], "--tf") && i+1 < argc)      { pars->t_f     = atof(argv[++i]); }

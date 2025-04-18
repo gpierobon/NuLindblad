@@ -168,12 +168,12 @@ void printStatus(int step, int num_steps, double t, double jz,
 
     std::cout << std::fixed    <<  std::setprecision(4)
               << std::setw(8)  << "Meas:"     << " " << std::setw(6) << step << "/" << num_steps
-              << std::setw(6)  << "t:"        << " " << std::setw(8) << t
-              << std::setw(8)  << "<Jz>:"    << " " << std::setw(8) << jz
-              << std::setw(8) << "n:"    << " " << std::setw(8)
+              << std::setw(6)  << "t:"        << " " << std::setw(6) << t
+              << std::setw(8)  << "<Jz>:"    << " " << std::setw(10) << jz
+              << std::setw(6) << "n:"    << " " << std::setw(8)
               << (std::isnan(slope) ? "  ---" : std::to_string(slope).substr(0, 7))
               << std::setw(4)  << " "         << std::setw(6) << std::setprecision(1) << percent << "%"
-              << std::setw(14) << "Elapsed:"  << " " << std::setw(12) << time_str << std::endl;
+              << std::setw(12) << "Elapsed:"  << " " << std::setw(12) << time_str << std::endl;
 }
 
 
